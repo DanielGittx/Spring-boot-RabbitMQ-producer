@@ -14,4 +14,5 @@ public class Message {
     private String messageId;
     private String customMessage;
     private String messageTimestamp;
+    private Integer msisdn;
 }
