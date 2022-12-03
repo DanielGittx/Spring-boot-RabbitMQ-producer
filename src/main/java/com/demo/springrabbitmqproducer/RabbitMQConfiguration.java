@@ -29,7 +29,7 @@ public class RabbitMQConfiguration {
     public Binding binding (Queue queue, TopicExchange exchange)
     {
         return BindingBuilder
-                .bind(queue).to(exchange)   //direct binding
+                .bind(queue).to(exchange)   //Topic binding
                 .with(ROUTING_KEY);
     }
     @Bean

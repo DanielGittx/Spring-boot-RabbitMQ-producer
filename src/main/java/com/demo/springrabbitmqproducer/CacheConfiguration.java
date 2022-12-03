@@ -46,7 +46,7 @@ public class CacheConfiguration {
         // Set to 1 minute
         // After one minute cached key will be cleared
         cacheConfigurations.put("apiHitCount",
-                defaultCacheConfig.entryTtl(Duration.ofMinutes(1)).   //TODO:- Pick this from config file
+                defaultCacheConfig.entryTtl(Duration.ofMinutes(1)).   //EXPIRE COMMAND AFTER TTL lapses - TODO:- Pick this from config file
                         serializeValuesWith(RedisSerializationContext.
                                 SerializationPair.fromSerializer(RedisSerializer.string()))
         );

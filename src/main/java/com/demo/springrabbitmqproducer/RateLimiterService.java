@@ -18,8 +18,9 @@ public class RateLimiterService {
 
     @Bean
     public Bucket createNewBucket() {
-        long capacity = 2;  //TODO:- Read this from config file
-        Refill refill = Refill.greedy(2, Duration.ofMinutes(1));    //TODO:- READ THIS FROM CONFIG FILE
+        //Bucket capacity of 5 tokens and refill of a similar number
+        long capacity = 5;  //TODO:- Read this from config file
+        Refill refill = Refill.greedy(5, Duration.ofMinutes(1));    //TODO:- READ THIS FROM CONFIG FILE
         Bandwidth limit = Bandwidth.classic(capacity, refill);
         return Bucket4j.builder().addLimit(limit).build();
     }
