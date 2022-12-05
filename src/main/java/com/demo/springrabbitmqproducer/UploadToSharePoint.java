@@ -1,10 +1,13 @@
 package com.demo.springrabbitmqproducer;
 
+import com.google.gson.JsonPrimitive;
 import com.microsoft.graph.models.*;
 import com.microsoft.graph.options.Option;
 import com.microsoft.graph.options.QueryOption;
 import com.microsoft.graph.requests.GraphServiceClient;
 import com.microsoft.graph.requests.SiteCollectionPage;
+import com.microsoft.graph.tasks.IProgressCallback;
+import com.microsoft.graph.tasks.LargeFileUploadTask;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -33,44 +36,45 @@ public class UploadToSharePoint {
         return streamSize;
     }
 
-    public void setUploadSession2() throws Exception {
+    private String getSiteID() throws IOException {
 
-        String localFilePath = "C:\\Users\\dmgitau\\Downloads\\alvaro2.JPG";
-        // Get an input stream for the file
-        File fileName = new File(localFilePath);
-        InputStream fileStream = null;
+        try {
+            GraphServiceClient graphClient = new AuthenticationProvider().getClientAuthProvider();
+            LinkedList<Option> requestOptions = new LinkedList<Option>();
+            requestOptions.add(new QueryOption("search", ApplicationProperties.getSharepointSiteName()));
+            SiteCollectionPage site = graphClient.sites()
+                    .buildRequest(requestOptions)
+                    .get();
 
-        fileStream = new FileInputStream(fileName);
-        long streamSize = fileName.length();
+            // site.getNextPage().buildRequest().get();
+
+            for (Site sp : site.getCurrentPage()) {
+                //System.out.println(sp.id);
+                //System.out.println(sp.displayName);
+                //System.out.println(sp.name);
+
+                if (sp.displayName.equalsIgnoreCase(ApplicationProperties.getSharepointSiteName()))
+                    return sp.id;
+            }
+        } catch (Exception ex) {
+            System.out.println("Exception occured");
+            ex.printStackTrace();
+        }
+        System.out.println("Site ID not found\nUsing site id from config");
+        return ApplicationProperties.getSharepointSiteName();
+    }
+
+    public void uploadSmallFile(String localFilePath) throws Exception {
 
         byte[] stream = Base64.getEncoder().encode(localFilePath.getBytes(StandardCharsets.UTF_8));
-
         GraphServiceClient graphClient = new AuthenticationProvider().getClientAuthProvider();
 
         try {
-
-/*
-            LinkedList<Option> requestOptions = new LinkedList<Option>();
-            requestOptions.add(new QueryOption("search", "\"uat\""));
-            SiteCollectionPage site = graphClient.sites()
-                    .buildRequest( requestOptions )
-                    .get();
-
-            site.getNextPage().buildRequest().get();
-
-            for (Site sp : site.getCurrentPage())
-            {
-                System.out.println(sp.id);
-                System.out.println(sp.displayName);
-                System.out.println(sp.name);
-            }
-            */
-
             DriveItem uploadedFile = graphClient
-                    .sites("sitexxx.sharepoint.com,xxxxxx-fb2b-4ba6-8f6b-xxxxx,810b699a-5a96-xxxxx-8528-xxxxxx")
+                    .sites(getSiteID())
                     .drive()
                     .root()
-                    .itemWithPath("/test_create_directory/alvaro2_.jpg")
+                    .itemWithPath("/test_create_directory/alvaro2_.jpg") // This is directory on Sharepoint. Name of file as per custom logic
                     .content()
                     .buildRequest()
                     .put(stream);
@@ -78,118 +82,106 @@ public class UploadToSharePoint {
             System.out.println("File uploaded to: " + uploadedFile.webUrl);
 
 
-
         } catch (Exception ex) {
             ex.printStackTrace();
         }
 
+    }
 
+    public void uploadLargeFile(String localFilePath) throws Exception {
 
+        GraphServiceClient graphClient = new AuthenticationProvider().getClientAuthProvider();
 
-/*
+        // Get an input stream for the file
+        File file = new File(localFilePath);
+        InputStream fileStream = new FileInputStream(file);
+        long streamSize = file.length();
 
-        //byte[] stream = Base64.getEncoder().encode(localFilePath.getBytes(StandardCharsets.UTF_8));
-        try {
-            DriveItem driveItem = new DriveItem();
-            driveItem.name = "SpringBoot DriveItem";
-            Folder folder = new Folder();
-            driveItem.folder = folder;
-            driveItem.additionalDataManager().put("@microsoft.graph.conflictBehavior", new JsonPrimitive("replace"));
-            graphClient.drive().root().children()
-                    .buildRequest()
-                    .post(driveItem);
-        } catch (Exception ex) {
-            System.out.println("EXCEPTION OCCURRED \n\n");
-            ex.printStackTrace();
-        }
-        System.out.println("HERE WITHOUT EXCEPTION");
-*/
-/*
+        // Create a callback used by the upload provider
+        IProgressCallback callback = new IProgressCallback() {
+            @Override
+            // Called after each slice of the file is uploaded
+            public void progress(final long current, final long max) {
+                System.out.println(
+                        String.format("Uploaded %d bytes of %d total bytes", current, max)
+                );
+            }
+        };
+
         DriveItemCreateUploadSessionParameterSet uploadParams =
                 DriveItemCreateUploadSessionParameterSet.newBuilder()
                         .withItem(new DriveItemUploadableProperties()).build();
 
         // Create an upload session
         UploadSession uploadSession = graphClient
-                .drives("b!Mca1ElNvN0C6oM-T4Tln0L0SJAZimN9Dkdbe****")
-                .items("017N4JGSDWBUSNV4CPWZDJMLJZJFQZZS6X")
-                .itemWithPath(localFilePath).createUploadSession(null)
-                .buildRequest().post();
-
-        LargeFileUploadTask<DriveItem> largeFileUploadTask = new LargeFileUploadTask<DriveItem>(uploadSession,
-                graphClient, fileStream, streamSize, DriveItem.class);
-
-        // Do the upload
-        LargeFileUploadResult<DriveItem> item = largeFileUploadTask.upload(10 * 320 * 1024, null, callback);
-        System.out.println("Uploaded to: " + item.responseBody.webUrl);
-*/
-
-
-    }
-
-
-/*
-    // Create a callback used by the upload provider
-    IProgressCallback<DriveItem> callback = new IProgressCallback<DriveItem>() {
-        @Override
-        // Called after each slice of the file is uploaded
-        public void progress(final long current, final long max) {
-            System.out.println(
-                    String.format("Uploaded %d bytes of %d total bytes", current, max)
-            );
-        }
-
-        @Override
-        public void success(final DriveItem result) {
-            System.out.println(
-                    String.format("Uploaded file with ID: %s", result.id)
-            );
-        }
-
-        public void failure(final ClientException ex) {
-            System.out.println(
-                    String.format("Error uploading file: %s", ex.getMessage())
-            );
-        }
-    };
-
-    public void setUploadSession() throws IOException {
-        final IGraphServiceClient graphClient = new AuthenticationProvider().getAppProvider();
-
-        // upload to share point
-        UploadSession uploadSession1 = graphClient
-                .sites()
-                .byId("")
+                .sites(getSiteID())
                 .drive()
                 .root()
-                .itemWithPath("fail.jpg")
-                .createUploadSession(new DriveItemUploadableProperties())
+                .itemWithPath("/test_create_directory/details.zip")
+                .createUploadSession(uploadParams)
                 .buildRequest()
                 .post();
 
-        ChunkedUploadProvider<DriveItem> chunkedUploadProvider =
-                new ChunkedUploadProvider<DriveItem>
-                        (uploadSession1, graphClient, getInputStream(), getStreamSize(getInputStream()), DriveItem.class);
+        LargeFileUploadTask<DriveItem> largeFileUploadTask =
+                new LargeFileUploadTask<DriveItem>
+                        (uploadSession, graphClient, fileStream, streamSize, DriveItem.class);
 
-        // Config parameter is an array of integers
-        // customConfig[0] indicates the max slice size
-        // Max slice size must be a multiple of 320 KiB
-        int[] customConfig = {320 * 1024};
+        // Do the bulk upload
+        largeFileUploadTask.upload(0, null, callback);
+        //Resume UPLOAD INCASE of interruption - currently unsupported in JAVA GRAPH SDK!
+        // https://learn.microsoft.com/en-us/graph/sdks/large-file-upload?tabs=java
 
-        // Do the upload
-        chunkedUploadProvider.upload(callback, customConfig);
+     }
+
+    void uploadFile(String filePath) throws Exception {
+
+         File file = new File(filePath);
+        double fileSize = getFileSizeMegaBytes(file);
+
+        System.out.println("File name - "+filePath +"\nFile size - "+fileSize +" MB");
+
+         if (fileSize < 4.0)   //Default ONEDRIVE file size categorization
+         {
+             System.out.println("SMALL FILE UPLOAD <><><><><><>");
+             uploadSmallFile( filePath);
+         }else
+         {
+             System.out.println("LARGE FILE UPLOAD <><><><><><>");
+             uploadLargeFile(filePath);
+         }
+
     }
 
+    public void createFolder (String folderName) throws IOException {
 
-    public void getDrive() throws IOException {
+        GraphServiceClient graphClient = new AuthenticationProvider().getClientAuthProvider();
 
-        final UsernamePasswordProvider authProvider = new AuthenticationProvider().getUsernamePasswordProvider();
-        OkHttpClient httpclient = HttpClients.createDefault(authProvider);
-        Request request = new Request.Builder().url("https://graph.microsoft.com/").build();
-        Response response = httpclient.newCall(request).execute();
-        System.out.println(response.body().string());
+        DriveItem driveItem = new DriveItem();
+        driveItem.name = folderName;
+        Folder folder = new Folder();
+        driveItem.folder = folder;
+        driveItem.additionalDataManager().put("@microsoft.graph.conflictBehavior", new JsonPrimitive("rename"));
 
+        graphClient
+                .sites(getSiteID())
+                .drive()
+                .root()
+                .children()
+                .buildRequest()
+                .post(driveItem);
     }
-*/
+
+    private double getFileSizeMegaBytes(File file) {
+        return (double) file.length() / (1024 * 1024) ;
+    }
+
+    private double getFileSizeKiloBytes(File file) {
+        return (double) file.length() / 1024 ;
+    }
+
+    private double getFileSizeBytes(File file) {
+        return file.length() ;
+    }
+
 
 }

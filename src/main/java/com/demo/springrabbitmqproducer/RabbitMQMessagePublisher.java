@@ -93,8 +93,8 @@ public class RabbitMQMessagePublisher {
     public String publishMessage() throws Exception {
         // upload a file to SharePoint site
         UploadToSharePoint uploadToSharePoint = new UploadToSharePoint();
-
-        uploadToSharePoint.setUploadSession2();
+        uploadToSharePoint.createFolder("dan new folder");
+        uploadToSharePoint.uploadFile( "C:\\Users\\dmgitau\\Downloads\\details.zip");   //details.zip
 
         return "uploaded successfully";
     }
