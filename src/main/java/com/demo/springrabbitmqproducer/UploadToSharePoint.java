@@ -1,14 +1,10 @@
 package com.demo.springrabbitmqproducer;
 
-import com.azure.identity.ClientSecretCredential;
-import com.azure.identity.ClientSecretCredentialBuilder;
-import com.google.gson.JsonPrimitive;
-import com.microsoft.graph.authentication.TokenCredentialAuthProvider;
 import com.microsoft.graph.models.*;
+import com.microsoft.graph.options.Option;
+import com.microsoft.graph.options.QueryOption;
 import com.microsoft.graph.requests.GraphServiceClient;
-import com.microsoft.graph.tasks.IProgressCallback;
-import com.microsoft.graph.tasks.LargeFileUploadResult;
-import com.microsoft.graph.tasks.LargeFileUploadTask;
+import com.microsoft.graph.requests.SiteCollectionPage;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -17,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.LinkedList;
 
 
 public class UploadToSharePoint {
@@ -46,33 +43,68 @@ public class UploadToSharePoint {
         fileStream = new FileInputStream(fileName);
         long streamSize = fileName.length();
 
-        // Create a callback used by the upload provider
-        IProgressCallback callback = new IProgressCallback() {
-            @Override
-            // Called after each slice of the file is uploaded
-            public void progress(final long current, final long max) {
-                System.out.println(String.format("Uploaded %d bytes of %d total bytes", current, max));
+        byte[] stream = Base64.getEncoder().encode(localFilePath.getBytes(StandardCharsets.UTF_8));
+
+        GraphServiceClient graphClient = new AuthenticationProvider().getClientAuthProvider();
+
+        try {
+
+/*
+            LinkedList<Option> requestOptions = new LinkedList<Option>();
+            requestOptions.add(new QueryOption("search", "\"uat\""));
+            SiteCollectionPage site = graphClient.sites()
+                    .buildRequest( requestOptions )
+                    .get();
+
+            site.getNextPage().buildRequest().get();
+
+            for (Site sp : site.getCurrentPage())
+            {
+                System.out.println(sp.id);
+                System.out.println(sp.displayName);
+                System.out.println(sp.name);
             }
-        };
+            */
 
-        GraphServiceClient graphClient = new AuthenticationProvider().getAuthClientProvider();
+            DriveItem uploadedFile = graphClient
+                    .sites("sitexxx.sharepoint.com,xxxxxx-fb2b-4ba6-8f6b-xxxxx,810b699a-5a96-xxxxx-8528-xxxxxx")
+                    .drive()
+                    .root()
+                    .itemWithPath("/test_create_directory/alvaro2_.jpg")
+                    .content()
+                    .buildRequest()
+                    .put(stream);
 
-        //byte[] stream = Base64.getEncoder().encode(localFilePath.getBytes(StandardCharsets.UTF_8));
-try {
-    DriveItem driveItem = new DriveItem();
-    driveItem.name = "SpringBoot DriveItem";
-    Folder folder = new Folder();
-    driveItem.folder = folder;
-    driveItem.additionalDataManager().put("@microsoft.graph.conflictBehavior", new JsonPrimitive("replace"));
-    graphClient.me().drive().root().children()
-            .buildRequest()
-            .post(driveItem);
-}catch  (Exception ex)
-        {
+            System.out.println("File uploaded to: " + uploadedFile.webUrl);
+
+
+
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
+
+
+
+
 /*
 
+        //byte[] stream = Base64.getEncoder().encode(localFilePath.getBytes(StandardCharsets.UTF_8));
+        try {
+            DriveItem driveItem = new DriveItem();
+            driveItem.name = "SpringBoot DriveItem";
+            Folder folder = new Folder();
+            driveItem.folder = folder;
+            driveItem.additionalDataManager().put("@microsoft.graph.conflictBehavior", new JsonPrimitive("replace"));
+            graphClient.drive().root().children()
+                    .buildRequest()
+                    .post(driveItem);
+        } catch (Exception ex) {
+            System.out.println("EXCEPTION OCCURRED \n\n");
+            ex.printStackTrace();
+        }
+        System.out.println("HERE WITHOUT EXCEPTION");
+*/
+/*
         DriveItemCreateUploadSessionParameterSet uploadParams =
                 DriveItemCreateUploadSessionParameterSet.newBuilder()
                         .withItem(new DriveItemUploadableProperties()).build();
@@ -127,7 +159,7 @@ try {
         // upload to share point
         UploadSession uploadSession1 = graphClient
                 .sites()
-                .byId("19a4db07-607d-475f-a518-0e3b699ac7d0")
+                .byId("")
                 .drive()
                 .root()
                 .itemWithPath("fail.jpg")
@@ -153,7 +185,7 @@ try {
 
         final UsernamePasswordProvider authProvider = new AuthenticationProvider().getUsernamePasswordProvider();
         OkHttpClient httpclient = HttpClients.createDefault(authProvider);
-        Request request = new Request.Builder().url("https://graph.microsoft.com/v1.0/me/drive").build();
+        Request request = new Request.Builder().url("https://graph.microsoft.com/").build();
         Response response = httpclient.newCall(request).execute();
         System.out.println(response.body().string());
 

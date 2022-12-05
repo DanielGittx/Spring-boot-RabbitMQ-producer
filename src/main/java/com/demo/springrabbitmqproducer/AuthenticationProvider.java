@@ -2,6 +2,8 @@ package com.demo.springrabbitmqproducer;
 
 import com.azure.identity.ClientSecretCredential;
 import com.azure.identity.ClientSecretCredentialBuilder;
+import com.microsoft.graph.auth.enums.NationalCloud;
+import com.microsoft.graph.auth.publicClient.UsernamePasswordProvider;
 import com.microsoft.graph.authentication.TokenCredentialAuthProvider;
 import com.microsoft.graph.requests.GraphServiceClient;
 
@@ -25,7 +27,7 @@ public class AuthenticationProvider {
     }
 
 
-    public GraphServiceClient getAuthClientProvider  () throws IOException {
+    public GraphServiceClient getClientAuthProvider() throws IOException {
 
         final ClientSecretCredential clientSecretCredential = new ClientSecretCredentialBuilder()
                 .clientId(ApplicationProperties.getClientId())
@@ -42,14 +44,14 @@ public class AuthenticationProvider {
                         .builder()
                         .authenticationProvider(tokenCredentialAuthProvider)
                         .buildClient();
-        //final User me = graphClient.me().buildRequest().get();
 
         return graphClient;
 
-    }
-/*
-    public GraphServiceClient getAuthProvider() throws IOException {
+        // Use AZURE KEY_VAULT for security key rotation - https://learn.microsoft.com/en-us/graph/tutorial-applications-basics?tabs=http
 
+    }
+
+    public GraphServiceClient getUserAuthProvider() throws IOException {
         UsernamePasswordProvider authProvider = new UsernamePasswordProvider(
                 ApplicationProperties.getClientId(),
                 ApplicationProperties.getScopeList(),
@@ -68,18 +70,5 @@ public class AuthenticationProvider {
         return graphClient;
     }
 
-    public UsernamePasswordProvider  getUsernamePasswordProvider() throws IOException {
 
-        UsernamePasswordProvider authProvider = new UsernamePasswordProvider(
-                ApplicationProperties.getClientId(),
-                ApplicationProperties.getScopeList(),
-                ApplicationProperties.getUsername(),
-                ApplicationProperties.getPassword(),
-                NationalCloud.Global,
-                ApplicationProperties.getTenantId(),
-                ApplicationProperties.getClientSecret());
-
-     return authProvider;
-    }
-*/
 }
