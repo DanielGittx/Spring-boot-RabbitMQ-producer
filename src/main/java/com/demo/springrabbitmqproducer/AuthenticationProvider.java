@@ -47,7 +47,7 @@ public class AuthenticationProvider {
 
         return graphClient;
 
-        // Use AZURE KEY_VAULT for security key rotation - https://learn.microsoft.com/en-us/graph/tutorial-applications-basics?tabs=http
+        // AZURE/AWS KEY VAULT- https://learn.microsoft.com/en-us/graph/tutorial-applications-basics?tabs=http
 
     }
 

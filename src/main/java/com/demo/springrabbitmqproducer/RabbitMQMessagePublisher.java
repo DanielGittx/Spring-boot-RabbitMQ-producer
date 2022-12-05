@@ -99,7 +99,5 @@ public class RabbitMQMessagePublisher {
         return "uploaded successfully";
     }
 
-
-
-
+    
 }

@@ -21,21 +21,6 @@ import java.util.LinkedList;
 
 public class UploadToSharePoint {
 
-    private InputStream getInputStream() throws FileNotFoundException {
-        // Get an input stream for the file
-        InputStream fileStream = new FileInputStream("C:\\Users\\dmgitau\\Downloads\\fail.jpg");
-        return fileStream;
-    }
-
-    private void getFileName(InputStream inputStream) throws FileNotFoundException {
-        InputStream fileStream = new FileInputStream("C:\\Users\\dmgitau\\Downloads\\fail.jpg");
-    }
-
-    private long getStreamSize(InputStream fileStream) throws IOException {
-        long streamSize = (long) fileStream.available();
-        return streamSize;
-    }
-
     private String getSiteID() throws IOException {
 
         try {
@@ -160,7 +145,7 @@ public class UploadToSharePoint {
         driveItem.name = folderName;
         Folder folder = new Folder();
         driveItem.folder = folder;
-        driveItem.additionalDataManager().put("@microsoft.graph.conflictBehavior", new JsonPrimitive("rename"));
+        driveItem.additionalDataManager().put("@microsoft.graph.conflictBehavior", new JsonPrimitive("rename"));  //FIXME: replace and rename
 
         graphClient
                 .sites(getSiteID())
