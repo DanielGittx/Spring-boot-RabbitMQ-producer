@@ -21,6 +21,9 @@ import java.util.LinkedList;
 
 public class UploadToSharePoint {
 
+    public UploadToSharePoint() throws IOException {
+    }
+
     private String getSiteID() throws IOException {
 
         try {
@@ -37,7 +40,6 @@ public class UploadToSharePoint {
                 //System.out.println(sp.id);
                 //System.out.println(sp.displayName);
                 //System.out.println(sp.name);
-
                 if (sp.displayName.equalsIgnoreCase(ApplicationProperties.getSharepointSiteName()))
                     return sp.id;
             }
@@ -51,6 +53,7 @@ public class UploadToSharePoint {
 
     public void uploadSmallFile(String localFilePath) throws Exception {
 
+        System.out.println("SMALL FILE UPLOAD <><><><><><>");
         byte[] stream = Base64.getEncoder().encode(localFilePath.getBytes(StandardCharsets.UTF_8));
         GraphServiceClient graphClient = new AuthenticationProvider().getClientAuthProvider();
 
@@ -75,6 +78,7 @@ public class UploadToSharePoint {
 
     public void uploadLargeFile(String localFilePath) throws Exception {
 
+        System.out.println("LARGE FILE UPLOAD <><><><><><>");
         GraphServiceClient graphClient = new AuthenticationProvider().getClientAuthProvider();
 
         // Get an input stream for the file
@@ -102,7 +106,7 @@ public class UploadToSharePoint {
                 .sites(getSiteID())
                 .drive()
                 .root()
-                .itemWithPath("/test_create_directory/details.zip")
+                .itemWithPath("/test_create_directory/sp/details.zip")
                 .createUploadSession(uploadParams)
                 .buildRequest()
                 .post();
@@ -114,7 +118,7 @@ public class UploadToSharePoint {
         // Do the bulk upload
         largeFileUploadTask.upload(0, null, callback);
         //Resume UPLOAD INCASE of interruption - currently unsupported in JAVA GRAPH SDK!
-        // https://learn.microsoft.com/en-us/graph/sdks/large-file-upload?tabs=java
+        //https://learn.microsoft.com/en-us/graph/sdks/large-file-upload?tabs=java
 
      }
 
@@ -127,11 +131,9 @@ public class UploadToSharePoint {
 
          if (fileSize < 4.0)   //Default ONEDRIVE file size categorization
          {
-             System.out.println("SMALL FILE UPLOAD <><><><><><>");
              uploadSmallFile( filePath);
          }else
          {
-             System.out.println("LARGE FILE UPLOAD <><><><><><>");
              uploadLargeFile(filePath);
          }
 
@@ -146,7 +148,6 @@ public class UploadToSharePoint {
         Folder folder = new Folder();
         driveItem.folder = folder;
         driveItem.additionalDataManager().put("@microsoft.graph.conflictBehavior", new JsonPrimitive("rename"));  //FIXME: replace and rename
-
         graphClient
                 .sites(getSiteID())
                 .drive()
