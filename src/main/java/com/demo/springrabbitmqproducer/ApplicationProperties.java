@@ -102,4 +102,14 @@ public class ApplicationProperties {
             throw new IOException("sharepoint site name value not found");
         }
     }
+    public static String getSharepointSiteId() throws IOException {
+        try {
+            Properties propValues = new ApplicationProperties().getPropValues();
+            String userName = propValues.getProperty("sharepoint.site.id");
+            return userName;
+        } catch (IOException ex) {
+            throw new IOException("sharepoint site id value not found");
+        }
+    }
+
 }

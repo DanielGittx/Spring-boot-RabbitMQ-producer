@@ -37,7 +37,7 @@ public class UploadToSharePoint {
             // site.getNextPage().buildRequest().get();
 
             for (Site sp : site.getCurrentPage()) {
-                //System.out.println(sp.id);
+                System.out.println(sp.id);
                 //System.out.println(sp.displayName);
                 //System.out.println(sp.name);
                 if (sp.displayName.equalsIgnoreCase(ApplicationProperties.getSharepointSiteName()))
@@ -48,7 +48,7 @@ public class UploadToSharePoint {
             ex.printStackTrace();
         }
         System.out.println("Site ID not found\nUsing site id from config");
-        return ApplicationProperties.getSharepointSiteName();
+        return ApplicationProperties.getSharepointSiteId();
     }
 
     public void uploadSmallFile(String localFilePath) throws Exception {
